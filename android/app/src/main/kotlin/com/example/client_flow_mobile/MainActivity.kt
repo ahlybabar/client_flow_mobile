@@ -1,0 +1,5 @@
+package com.example.client_flow_mobile
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity : FlutterActivity()
