@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_badge.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../../data/mock_data.dart';
+import 'add_edit_invoice_screen.dart';
 
 class InvoicesScreen extends StatefulWidget {
   const InvoicesScreen({super.key});
@@ -18,12 +20,49 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
     return MockData.invoices.where((i) => i['status'] == _filter).toList();
   }
 
+  double get _totalAmount {
+    return MockData.invoices.fold(0.0, (sum, i) {
+      final amount = double.tryParse((i['amount'] as String).replaceAll('\$', '').replaceAll(',', '')) ?? 0;
+      return sum + amount;
+    });
+  }
+
+  double get _paidAmount {
+    return MockData.invoices.where((i) => i['status'] == 'paid').fold(0.0, (sum, i) {
+      final amount = double.tryParse((i['amount'] as String).replaceAll('\$', '').replaceAll(',', '')) ?? 0;
+      return sum + amount;
+    });
+  }
+
+  double get _overdueAmount {
+    return MockData.invoices.where((i) => i['status'] == 'overdue').fold(0.0, (sum, i) {
+      final amount = double.tryParse((i['amount'] as String).replaceAll('\$', '').replaceAll(',', '')) ?? 0;
+      return sum + amount;
+    });
+  }
+
+  String _formatAmount(double amount) {
+    return '\$${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(title: const Text('Invoices')),
-      floatingActionButton: FloatingActionButton(onPressed: () {}, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'invoices_fab',
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddEditInvoiceScreen()),
+          );
+          if (result != null && result is Map<String, dynamic>) {
+            setState(() => MockData.invoices.add(result));
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -32,11 +71,11 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Expanded(child: _summaryTile('Total', '\$13,800', AppColors.primary, isDark)),
+                  Expanded(child: _summaryTile('Total', _formatAmount(_totalAmount), AppColors.primary, isDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _summaryTile('Paid', '\$5,700', AppColors.success, isDark)),
+                  Expanded(child: _summaryTile('Paid', _formatAmount(_paidAmount), AppColors.success, isDark)),
                   const SizedBox(width: 8),
-                  Expanded(child: _summaryTile('Overdue', '\$4,200', AppColors.danger, isDark)),
+                  Expanded(child: _summaryTile('Overdue', _formatAmount(_overdueAmount), AppColors.danger, isDark)),
                 ],
               ),
             ),
@@ -56,13 +95,25 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             ),
             const SizedBox(height: 8),
             // Invoice list
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              itemCount: _filtered.length,
-              itemBuilder: (ctx, i) => _invoiceCard(_filtered[i], isDark, context),
-            ),
+            _filtered.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(children: [
+                      Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.textMuted),
+                      const SizedBox(height: 12),
+                      Text('No invoices found', style: TextStyle(color: AppColors.textMuted)),
+                    ]),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filtered.length,
+                    itemBuilder: (ctx, i) => AnimatedListItem(
+                      index: i,
+                      child: _invoiceCard(_filtered[i], isDark, context),
+                    ),
+                  ),
           ],
         ),
       ),
@@ -102,7 +153,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
   }
 
   Widget _invoiceCard(Map<String, dynamic> inv, bool isDark, BuildContext context) {
-    return GestureDetector(
+    return ScaleTap(
       onTap: () => _showInvoiceDetail(context, inv, isDark),
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -181,7 +232,7 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(color: AppColors.scaffoldBg, borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: isDark ? AppColors.darkScaffoldBg : AppColors.scaffoldBg, borderRadius: BorderRadius.circular(10)),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text('Bill To', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
                 const SizedBox(height: 4),
@@ -211,7 +262,17 @@ class _InvoicesScreenState extends State<InvoicesScreen> {
             Row(children: [
               Expanded(child: OutlinedButton(onPressed: () {}, child: const Text('Download PDF'))),
               const SizedBox(width: 12),
-              Expanded(child: ElevatedButton(onPressed: () {}, child: const Text('Mark as Paid'))),
+              Expanded(child: ElevatedButton(
+                onPressed: inv['status'] == 'paid' ? null : () {
+                  setState(() => inv['status'] = 'paid');
+                  Navigator.pop(ctx);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Invoice marked as paid!'),
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                },
+                child: Text(inv['status'] == 'paid' ? 'Already Paid' : 'Mark as Paid'),
+              )),
             ]),
           ],
         ),

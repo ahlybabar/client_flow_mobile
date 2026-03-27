@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../../data/mock_data.dart';
 import 'client_detail_screen.dart';
+import 'add_edit_client_screen.dart';
 
 class ClientsListScreen extends StatefulWidget {
   const ClientsListScreen({super.key});
@@ -38,7 +40,16 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        heroTag: 'clients_fab',
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddEditClientScreen()),
+          );
+          if (result != null && result is Map<String, dynamic>) {
+            setState(() => MockData.clients.add(result));
+          }
+        },
         child: const Icon(Icons.add),
       ),
       body: Column(
@@ -59,14 +70,23 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
           ),
           // Client list
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _filteredClients.length,
-              itemBuilder: (ctx, i) {
-                final c = _filteredClients[i];
-                return _clientCard(context, c, isDark);
-              },
-            ),
+            child: _filteredClients.isEmpty
+                ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(Icons.people_outline, size: 48, color: AppColors.textMuted),
+                    const SizedBox(height: 12),
+                    Text('No clients found', style: TextStyle(color: AppColors.textMuted)),
+                  ]))
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _filteredClients.length,
+                    itemBuilder: (ctx, i) {
+                      final c = _filteredClients[i];
+                      return AnimatedListItem(
+                        index: i,
+                        child: _clientCard(context, c, isDark),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -90,8 +110,11 @@ class _ClientsListScreenState extends State<ClientsListScreen> {
   }
 
   Widget _clientCard(BuildContext context, Map<String, dynamic> client, bool isDark) {
-    return GestureDetector(
-      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClientDetailScreen(client: client))),
+    return ScaleTap(
+      onTap: () async {
+        await Navigator.push(context, MaterialPageRoute(builder: (_) => ClientDetailScreen(client: client)));
+        setState(() {});
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),

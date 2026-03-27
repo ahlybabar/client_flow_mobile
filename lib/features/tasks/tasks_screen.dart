@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../core/widgets/animated_list_item.dart';
 import '../../data/mock_data.dart';
+import 'add_edit_task_screen.dart';
 
 class TasksScreen extends StatefulWidget {
   const TasksScreen({super.key});
@@ -37,7 +39,19 @@ class _TasksScreenState extends State<TasksScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () {}, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'tasks_fab',
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddEditTaskScreen()),
+          );
+          if (result != null && result is Map<String, dynamic>) {
+            setState(() => MockData.tasks.add(result));
+          }
+        },
+        child: const Icon(Icons.add),
+      ),
       body: Column(
         children: [
           // Filters
@@ -77,56 +91,67 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Widget _listView(bool isDark) {
+    if (_filteredTasks.isEmpty) {
+      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.task_alt, size: 48, color: AppColors.textMuted),
+        const SizedBox(height: 12),
+        Text('No tasks found', style: TextStyle(color: AppColors.textMuted)),
+      ]));
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: _filteredTasks.length,
       itemBuilder: (ctx, i) {
         final t = _filteredTasks[i];
-        return GestureDetector(
-          onTap: () => _showTaskDetail(context, t, isDark),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCardBg : AppColors.cardBg,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: t['overdue'] == true ? AppColors.danger.withValues(alpha: 0.3) : (isDark ? AppColors.darkBorder : AppColors.border)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text(t['task'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
-                    StatusBadge.priority(t['priority'] as String),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.folder_outlined, size: 13, color: AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text(t['project'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                    const Spacer(),
-                    AvatarCircle(initials: t['assignee'] as String, size: 22, bgColor: AppColors.primary.withValues(alpha: 0.15)),
-                    const SizedBox(width: 6),
-                    Text(t['assigneeName'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today_outlined, size: 13, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted),
-                    const SizedBox(width: 4),
-                    Text(t['due'] as String, style: TextStyle(fontSize: 12, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted, fontWeight: t['overdue'] == true ? FontWeight.w600 : FontWeight.normal)),
-                    if (t['overdue'] == true) ...[const SizedBox(width: 6), Text('OVERDUE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.danger))],
-                    const Spacer(),
-                    _statusDot(t['status'] as String),
-                    const SizedBox(width: 4),
-                    Text(t['status'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                  ],
-                ),
-              ],
+        return AnimatedListItem(
+          index: i,
+          child: ScaleTap(
+            onTap: () => _showTaskDetail(context, t, isDark),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCardBg : AppColors.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: t['overdue'] == true ? AppColors.danger.withValues(alpha: 0.3) : (isDark ? AppColors.darkBorder : AppColors.border)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(child: Text(t['task'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
+                      StatusBadge.priority(t['priority'] as String),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.folder_outlined, size: 13, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text(t['project'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      const Spacer(),
+                      AvatarCircle(initials: t['assignee'] as String, size: 22, bgColor: AppColors.primary.withValues(alpha: 0.15)),
+                      const SizedBox(width: 6),
+                      Text(t['assigneeName'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today_outlined, size: 13, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text(t['due'] as String, style: TextStyle(fontSize: 12, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted, fontWeight: t['overdue'] == true ? FontWeight.w600 : FontWeight.normal)),
+                      if (t['overdue'] == true) ...[const SizedBox(width: 6), Text('OVERDUE', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.danger))],
+                      const Spacer(),
+                      _statusDot(t['status'] as String),
+                      const SizedBox(width: 4),
+                      Text(t['status'] as String, style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -171,40 +196,45 @@ class _TasksScreenState extends State<TasksScreen> {
                 ),
               ),
               Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(10),
-                  children: colTasks.map((t) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkScaffoldBg : AppColors.cardBg,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(t['task'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Text(t['project'] as String, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
-                            const Spacer(),
-                            StatusBadge.priority(t['priority'] as String),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            AvatarCircle(initials: t['assignee'] as String, size: 20, bgColor: AppColors.primary),
-                            const SizedBox(width: 6),
-                            Text(t['due'] as String, style: TextStyle(fontSize: 11, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted)),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )).toList(),
-                ),
+                child: colTasks.isEmpty
+                    ? Center(child: Text('No tasks', style: TextStyle(fontSize: 12, color: AppColors.textMuted)))
+                    : ListView(
+                        padding: const EdgeInsets.all(10),
+                        children: colTasks.map((t) => GestureDetector(
+                          onTap: () => _showTaskDetail(context, t, isDark),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColors.darkScaffoldBg : AppColors.cardBg,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(t['task'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Text(t['project'] as String, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                                    const Spacer(),
+                                    StatusBadge.priority(t['priority'] as String),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    AvatarCircle(initials: t['assignee'] as String, size: 20, bgColor: AppColors.primary),
+                                    const SizedBox(width: 6),
+                                    Text(t['due'] as String, style: TextStyle(fontSize: 11, color: t['overdue'] == true ? AppColors.danger : AppColors.textMuted)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        )).toList(),
+                      ),
               ),
             ],
           ),
@@ -249,6 +279,38 @@ class _TasksScreenState extends State<TasksScreen> {
             _detailRow(Icons.calendar_today_outlined, 'Due Date', task['due'] as String),
             _detailRow(Icons.flag_outlined, 'Status', task['status'] as String),
             const SizedBox(height: 16),
+
+            // Status update buttons
+            Text('Update Status', style: Theme.of(context).textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Row(children: ['To Do', 'In Progress', 'Review', 'Completed'].map((s) {
+              final isActive = task['status'] == s;
+              return Expanded(child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      task['status'] = s;
+                      if (s == 'Completed') task['overdue'] = false;
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isActive ? AppColors.primary : AppColors.hoverBg,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(child: Text(
+                      s == 'In Progress' ? 'Active' : (s == 'Completed' ? 'Done' : s),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: isActive ? Colors.white : AppColors.textSecondary),
+                    )),
+                  ),
+                ),
+              ));
+            }).toList()),
+            const SizedBox(height: 16),
+
             const Divider(),
             const SizedBox(height: 8),
             Text('Description', style: Theme.of(context).textTheme.titleSmall),
@@ -266,6 +328,19 @@ class _TasksScreenState extends State<TasksScreen> {
             const SizedBox(height: 8),
             _commentItem('John Doe', 'Looking good! Let\'s review this tomorrow.', '2 hours ago'),
             _commentItem('Sarah Kim', 'Updated the mockups based on feedback.', '1 day ago'),
+            const SizedBox(height: 16),
+
+            // Edit button
+            OutlinedButton.icon(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(context, MaterialPageRoute(
+                  builder: (_) => AddEditTaskScreen(task: task),
+                )).then((_) => setState(() {}));
+              },
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Edit Task'),
+            ),
           ],
         ),
       ),

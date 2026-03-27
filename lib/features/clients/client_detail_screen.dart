@@ -2,20 +2,78 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/common_widgets.dart';
+import '../../data/mock_data.dart';
+import 'add_edit_client_screen.dart';
 
-class ClientDetailScreen extends StatelessWidget {
+class ClientDetailScreen extends StatefulWidget {
   final Map<String, dynamic> client;
   const ClientDetailScreen({super.key, required this.client});
 
   @override
+  State<ClientDetailScreen> createState() => _ClientDetailScreenState();
+}
+
+class _ClientDetailScreenState extends State<ClientDetailScreen> {
+  late Map<String, dynamic> client;
+
+  @override
+  void initState() {
+    super.initState();
+    client = widget.client;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Get this client's projects
+    final clientProjects = MockData.projects.where((p) => p['client'] == client['company']).toList();
+    // Get this client's invoices
+    final clientInvoices = MockData.invoices.where((i) => i['client'] == client['company']).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: Text(client['company'] as String),
         actions: [
-          IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () async {
+              final result = await Navigator.push(context, MaterialPageRoute(
+                builder: (_) => AddEditClientScreen(client: client),
+              ));
+              if (result != null && result is Map<String, dynamic>) {
+                final idx = MockData.clients.indexOf(client);
+                if (idx != -1) {
+                  MockData.clients[idx] = result;
+                  setState(() => client = result);
+                }
+              }
+            },
+          ),
+          PopupMenuButton<String>(
+            onSelected: (value) {
+              if (value == 'archive') {
+                setState(() {
+                  client['status'] = client['status'] == 'active' ? 'inactive' : 'active';
+                  final idx = MockData.clients.indexOf(widget.client);
+                  if (idx != -1) MockData.clients[idx] = client;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text('Client ${client['status'] == 'active' ? 'activated' : 'archived'}'),
+                  behavior: SnackBarBehavior.floating,
+                ));
+              }
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: 'archive',
+                child: Row(children: [
+                  Icon(client['status'] == 'active' ? Icons.archive_outlined : Icons.unarchive_outlined, size: 20, color: AppColors.textSecondary),
+                  const SizedBox(width: 8),
+                  Text(client['status'] == 'active' ? 'Archive' : 'Activate'),
+                ]),
+              ),
+            ],
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -88,22 +146,67 @@ class ClientDetailScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('Projects', style: Theme.of(context).textTheme.titleMedium),
-                      Text('${client['projects']} total', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      Text('${clientProjects.length} total', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  if (client['projects'] == 0)
+                  if (clientProjects.isEmpty)
                     Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('No projects yet', style: TextStyle(color: AppColors.textMuted))))
                   else
-                    ...[
-                      _projectItem('Website Redesign', 'In Progress', 0.75, isDark),
-                      const SizedBox(height: 8),
-                      _projectItem('Brand Identity', 'Completed', 1.0, isDark),
-                    ],
+                    ...clientProjects.map((p) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _projectItem(p['name'] as String, p['status'] as String, p['progress'] as double, isDark),
+                    )),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+
+            // Invoices
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkCardBg : AppColors.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Invoices', style: Theme.of(context).textTheme.titleMedium),
+                      Text('${clientInvoices.length} total', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (clientInvoices.isEmpty)
+                    Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('No invoices yet', style: TextStyle(color: AppColors.textMuted))))
+                  else
+                    ...clientInvoices.map((inv) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.darkScaffoldBg : AppColors.scaffoldBg,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(children: [
+                          Icon(Icons.receipt_long, size: 16, color: _invoiceStatusColor(inv['status'] as String)),
+                          const SizedBox(width: 10),
+                          Text(inv['id'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          const Spacer(),
+                          Text(inv['amount'] as String, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 8),
+                          _invoiceStatusBadge(inv['status'] as String),
+                        ]),
+                      ),
+                    )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
 
             // Activity
             Container(
@@ -209,6 +312,22 @@ class ClientDetailScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _invoiceStatusBadge(String status) {
+    switch (status) {
+      case 'paid': return StatusBadge.paid();
+      case 'overdue': return StatusBadge.overdue();
+      default: return StatusBadge.unpaid();
+    }
+  }
+
+  Color _invoiceStatusColor(String status) {
+    switch (status) {
+      case 'paid': return AppColors.success;
+      case 'overdue': return AppColors.danger;
+      default: return AppColors.warning;
+    }
   }
 
   Widget _activityItem(String title, String subtitle, String time, IconData icon, Color color) {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../clients/clients_list_screen.dart';
+import '../projects/projects_list_screen.dart';
 import '../tasks/tasks_screen.dart';
-import '../invoices/invoices_screen.dart';
 import '../more/more_screen.dart';
 import '../../core/theme/app_colors.dart';
 
@@ -28,8 +28,8 @@ class _MainShellState extends State<MainShell> {
     _screens = [
       const DashboardScreen(),
       const ClientsListScreen(),
+      const ProjectsListScreen(),
       const TasksScreen(),
-      const InvoicesScreen(),
       MoreScreen(onLogout: widget.onLogout, onToggleTheme: widget.onToggleTheme, isDark: widget.isDark),
     ];
   }
@@ -38,7 +38,14 @@ class _MainShellState extends State<MainShell> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      body: IndexedStack(index: _currentIndex, children: _screens),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 250),
+        child: IndexedStack(
+          key: ValueKey(_currentIndex),
+          index: _currentIndex,
+          children: _screens,
+        ),
+      ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           border: Border(top: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.border, width: 0.5)),
@@ -49,8 +56,8 @@ class _MainShellState extends State<MainShell> {
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.dashboard_outlined), activeIcon: Icon(Icons.dashboard), label: 'Home'),
             BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Clients'),
+            BottomNavigationBarItem(icon: Icon(Icons.folder_outlined), activeIcon: Icon(Icons.folder), label: 'Projects'),
             BottomNavigationBarItem(icon: Icon(Icons.task_alt_outlined), activeIcon: Icon(Icons.task_alt), label: 'Tasks'),
-            BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), activeIcon: Icon(Icons.receipt_long), label: 'Invoices'),
             BottomNavigationBarItem(icon: Icon(Icons.more_horiz), activeIcon: Icon(Icons.more_horiz), label: 'More'),
           ],
         ),

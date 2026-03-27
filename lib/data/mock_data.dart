@@ -2,7 +2,7 @@
 
 class MockData {
   // === CLIENTS ===
-  static final List<Map<String, dynamic>> clients = [
+  static List<Map<String, dynamic>> clients = [
     {'company': 'Acme Corp', 'contact': 'John Smith', 'email': 'john@acme.com', 'phone': '+1 555-0100', 'projects': 3, 'status': 'active', 'address': '123 Business Ave, Suite 100', 'since': 'March 2024', 'totalInvoiced': '\$24,200', 'totalPaid': '\$19,700', 'outstanding': '\$4,500'},
     {'company': 'TechStart Inc', 'contact': 'Sarah Johnson', 'email': 'sarah@techstart.io', 'phone': '+1 555-0101', 'projects': 2, 'status': 'active', 'address': '456 Startup Lane', 'since': 'January 2024', 'totalInvoiced': '\$18,500', 'totalPaid': '\$15,200', 'outstanding': '\$3,300'},
     {'company': 'Global Solutions', 'contact': 'Mike Chen', 'email': 'mike@globalsol.com', 'phone': '+1 555-0102', 'projects': 1, 'status': 'active', 'address': '789 Enterprise Blvd', 'since': 'February 2024', 'totalInvoiced': '\$12,800', 'totalPaid': '\$12,800', 'outstanding': '\$0'},
@@ -13,7 +13,7 @@ class MockData {
   ];
 
   // === PROJECTS ===
-  static final List<Map<String, dynamic>> projects = [
+  static List<Map<String, dynamic>> projects = [
     {'name': 'Website Redesign', 'client': 'Acme Corp', 'team': ['JD', 'SK', 'MW'], 'status': 'In Progress', 'deadline': 'Mar 15', 'progress': 0.75, 'tasksDone': 9, 'tasksTotal': 12, 'health': 'healthy', 'budget': '\$15,000'},
     {'name': 'Mobile App', 'client': 'TechStart Inc', 'team': ['JD', 'AB'], 'status': 'In Progress', 'deadline': 'Apr 20', 'progress': 0.45, 'tasksDone': 5, 'tasksTotal': 11, 'health': 'at-risk', 'budget': '\$22,000'},
     {'name': 'Brand Identity', 'client': 'Acme Corp', 'team': ['SK'], 'status': 'Completed', 'deadline': 'Feb 28', 'progress': 1.0, 'tasksDone': 8, 'tasksTotal': 8, 'health': 'healthy', 'budget': '\$8,000'},
@@ -23,7 +23,7 @@ class MockData {
   ];
 
   // === TASKS ===
-  static final List<Map<String, dynamic>> tasks = [
+  static List<Map<String, dynamic>> tasks = [
     {'task': 'Design homepage mockup', 'project': 'Website Redesign', 'assignee': 'SK', 'assigneeName': 'Sarah Kim', 'priority': 'High', 'status': 'In Progress', 'due': 'Mar 8', 'overdue': false},
     {'task': 'Implement header component', 'project': 'Website Redesign', 'assignee': 'JD', 'assigneeName': 'John Doe', 'priority': 'High', 'status': 'In Progress', 'due': 'Mar 5', 'overdue': true},
     {'task': 'API integration', 'project': 'Mobile App', 'assignee': 'AB', 'assigneeName': 'Anna Brown', 'priority': 'Medium', 'status': 'To Do', 'due': 'Mar 10', 'overdue': false},
@@ -34,7 +34,7 @@ class MockData {
   ];
 
   // === INVOICES ===
-  static final List<Map<String, dynamic>> invoices = [
+  static List<Map<String, dynamic>> invoices = [
     {'id': 'INV-0042', 'client': 'Acme Corp', 'project': 'Website Redesign', 'amount': '\$2,500', 'issue': 'Mar 1', 'due': 'Mar 15', 'status': 'paid'},
     {'id': 'INV-0041', 'client': 'TechStart Inc', 'project': 'Mobile App', 'amount': '\$1,800', 'issue': 'Feb 28', 'due': 'Mar 14', 'status': 'unpaid'},
     {'id': 'INV-0040', 'client': 'Global Solutions', 'project': 'E-commerce', 'amount': '\$4,200', 'issue': 'Feb 15', 'due': 'Mar 1', 'status': 'overdue'},
@@ -43,7 +43,7 @@ class MockData {
   ];
 
   // === TEAM ===
-  static final List<Map<String, dynamic>> team = [
+  static List<Map<String, dynamic>> team = [
     {'name': 'John Doe', 'email': 'john@clientflow.com', 'role': 'Admin', 'tasks': 12, 'projects': 8, 'score': 92, 'online': true},
     {'name': 'Sarah Kim', 'email': 'sarah@clientflow.com', 'role': 'Manager', 'tasks': 8, 'projects': 6, 'score': 88, 'online': true},
     {'name': 'Mike Wilson', 'email': 'mike@clientflow.com', 'role': 'Staff', 'tasks': 15, 'projects': 5, 'score': 85, 'online': false},
@@ -52,7 +52,7 @@ class MockData {
   ];
 
   // === PAYMENTS ===
-  static final List<Map<String, dynamic>> payments = [
+  static List<Map<String, dynamic>> payments = [
     {'id': 'PAY-0089', 'invoice': 'INV-0042', 'amount': '\$2,500', 'method': 'Bank Transfer', 'date': 'Mar 10, 2025'},
     {'id': 'PAY-0088', 'invoice': 'INV-0039', 'amount': '\$3,200', 'method': 'Stripe', 'date': 'Feb 28, 2025'},
     {'id': 'PAY-0087', 'invoice': 'INV-0038', 'amount': '\$1,500', 'method': 'PayPal', 'date': 'Feb 20, 2025'},
@@ -61,7 +61,7 @@ class MockData {
   ];
 
   // === NOTIFICATIONS ===
-  static final List<Map<String, dynamic>> notifications = [
+  static List<Map<String, dynamic>> notifications = [
     {'type': 'task', 'title': 'Task assigned to you', 'body': 'Design homepage mockup was assigned to you by John Doe.', 'time': '2 hours ago', 'unread': true},
     {'type': 'invoice', 'title': 'Invoice paid', 'body': 'INV-0042 for \$2,500 was paid by Acme Corp.', 'time': '1 day ago', 'unread': true},
     {'type': 'project', 'title': 'Project update', 'body': 'Website Redesign is now 75% complete.', 'time': '2 days ago', 'unread': false},
@@ -69,7 +69,7 @@ class MockData {
   ];
 
   // === ACTIVITIES ===
-  static final List<Map<String, dynamic>> activities = [
+  static List<Map<String, dynamic>> activities = [
     {'event': 'Client created', 'detail': 'TechStart Inc', 'user': 'John Doe', 'time': '10 min ago'},
     {'event': 'Project updated', 'detail': 'Website Redesign · 75% complete', 'user': 'Mike Wilson', 'time': '2 hours ago'},
     {'event': 'Task completed', 'detail': 'Design homepage mockup', 'user': 'Sarah Kim', 'time': '3 hours ago'},
@@ -79,7 +79,7 @@ class MockData {
   ];
 
   // === AUTOMATION RULES ===
-  static final List<Map<String, dynamic>> automationRules = [
+  static List<Map<String, dynamic>> automationRules = [
     {'name': 'Notify on overdue tasks', 'trigger': 'Task overdue > 3 days', 'condition': 'Priority is High or Critical', 'action': 'Notify project manager', 'enabled': true, 'runs': 24, 'lastRun': '2 hours ago', 'icon': '⚡'},
     {'name': 'Invoice reminder', 'trigger': 'Invoice unpaid after 7 days', 'condition': 'Amount > \$500', 'action': 'Send reminder email', 'enabled': true, 'runs': 12, 'lastRun': '1 day ago', 'icon': '💰'},
     {'name': 'Auto-generate invoice', 'trigger': 'Project completed', 'condition': 'Has billable hours', 'action': 'Generate final invoice', 'enabled': true, 'runs': 8, 'lastRun': '3 days ago', 'icon': '📄'},

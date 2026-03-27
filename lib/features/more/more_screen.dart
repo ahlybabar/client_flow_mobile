@@ -4,6 +4,7 @@ import '../../core/widgets/common_widgets.dart';
 import '../../core/widgets/status_badge.dart';
 import '../../core/widgets/metric_card.dart';
 import '../../data/mock_data.dart';
+import '../invoices/invoices_screen.dart';
 
 class MoreScreen extends StatelessWidget {
   final VoidCallback onLogout;
@@ -51,6 +52,7 @@ class MoreScreen extends StatelessWidget {
 
           // Menu sections
           _sectionTitle('Work'),
+          _menuItem(context, Icons.receipt_long_outlined, 'Invoices', '${MockData.invoices.length} total', () => _pushScreen(context, const InvoicesScreen())),
           _menuItem(context, Icons.folder_outlined, 'Projects', '${MockData.projects.length} total', () => _pushScreen(context, _ProjectsScreen())),
           _menuItem(context, Icons.payments_outlined, 'Payments', '5 recent', () => _pushScreen(context, _PaymentsScreen())),
           const SizedBox(height: 16),
