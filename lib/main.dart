@@ -20,7 +20,8 @@ class _ClientFlowAppState extends State<ClientFlowApp> {
 
   void _toggleTheme() {
     setState(() {
-      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+      _themeMode =
+      _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
     });
   }
 
@@ -42,10 +43,10 @@ class _ClientFlowAppState extends State<ClientFlowApp> {
       themeMode: _themeMode,
       home: _isLoggedIn
           ? MainShell(
-              onLogout: _onLogout,
-              onToggleTheme: _toggleTheme,
-              isDark: _themeMode == ThemeMode.dark,
-            )
+        onLogout: _onLogout,
+        onToggleTheme: _toggleTheme,
+        isDark: _themeMode == ThemeMode.dark,
+      )
           : LoginScreen(onLogin: _onLogin),
     );
   }
